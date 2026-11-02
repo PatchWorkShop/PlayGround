@@ -17,6 +17,8 @@
   let audio;
   let lastRenderedFloor = 0;
   let toastTimer;
+  let renderedPositions = new Map();
+  let combatEvents = [];
   const directions = { up: [0,-1], down: [0,1], left: [-1,0], right: [1,0] };
 
   function newGame() {
@@ -33,6 +35,7 @@
     lastRenderedFloor = state.floor;
   }
   function makeFloor() {
+    renderedPositions.clear(); combatEvents = [];
     state.walls = new Set(); state.enemies = []; state.items = []; state.bossDown = false;
     state.player = {x:1,y:1};
     // Leave a clear upper corridor and the final descent route open; the rest of each floor shifts.
@@ -60,19 +63,46 @@
   function enemyAt(x,y){return state.enemies.find(e=>e.x===x&&e.y===y)}
   function tileClass(x,y){if(x===0||y===0||x===W-1||y===H-1||state.walls.has(key(x,y)))return 'wall';return 'floor'}
 
+  function unitToken(kind, id) { return `${kind}:${id ?? 'default'}`; }
+  function queueMoveMotion(kind, id, from, to, variant) {
+    if(!from || !to || (from.x === to.x && from.y === to.y)) return;
+    const token = unitToken(kind, id);
+    const motion = { kind, id, from, to, variant, expiresAt: Date.now() + 620 };
+    renderedPositions.set(token, motion);
+    window.setTimeout(() => {
+      if(renderedPositions.get(token) === motion) renderedPositions.delete(token);
+    }, 640);
+  }
+  function queueCombatEvent(targetX, targetY, type, sourceKind='wild') {
+    const event = { targetX, targetY, type, sourceKind, expiresAt: Date.now() + 480 };
+    combatEvents.push(event);
+    combatEvents = combatEvents.filter(entry => entry.expiresAt > Date.now());
+    window.setTimeout(() => {
+      combatEvents = combatEvents.filter(entry => entry !== event);
+    }, 500);
+  }
+  function unitMotionMarkup(kind, id, defaultIcon) {
+    const motion = renderedPositions.get(unitToken(kind, id));
+    const classes = ['unit-figure', kind];
+    if(motion) classes.push(`move-${motion.variant}`);
+    return `<span class="${classes.join(' ')}"><span class="sprite">${defaultIcon}</span></span>`;
+  }
   function render() {
     if(!state)return;
+    combatEvents = combatEvents.filter(event => event.expiresAt > Date.now());
     const board=$('board'); board.innerHTML='';
     const reveal=state.floor!==lastRenderedFloor;
     board.classList.toggle('reveal',reveal);
     if(reveal){lastRenderedFloor=state.floor;window.setTimeout(()=>board.classList.remove('reveal'),700)}
+    const tileCombat = combatEvents.find(event => event.targetX===state.player.x && event.targetY===state.player.y);
     for(let y=0;y<H;y++) for(let x=0;x<W;x++) {
       const tile=document.createElement('div'); tile.className='tile '+tileClass(x,y); tile.setAttribute('role','gridcell'); tile.style.setProperty('--n',y*W+x); tile.style.setProperty('--depth',y/(H-1)); tile.style.setProperty('--extrusion',`${3+y*.28}px`);
-      const enemy=enemyAt(x,y), item=state.items.find(i=>i.x===x&&i.y===y);
-      if(x===state.exit.x&&y===state.exit.y){tile.classList.add('exit-tile');tile.title=state.floor===5?'The signal core':'Descent to the next depth';tile.innerHTML='<span class="sprite">▣</span>';}
-      if(item){tile.className='tile item-tile';tile.innerHTML=`<span class="sprite">${item.type==='ration'?'✚':'✦'}</span>`;tile.title=item.type==='ration'?'Field ration':'Signal shard'}
-      if(enemy){tile.className=`tile enemy-tile${enemy.boss?' boss-tile':''}`;tile.title=`${enemy.name} · ${enemy.hp}/${enemy.maxHp} HP`;tile.setAttribute('aria-label',`${enemy.name}, ${enemy.hp} of ${enemy.maxHp} vitality`);tile.innerHTML=`<span class="sprite">${enemy.icon}</span><span class="hp-pip"><i style="width:${Math.max(3,enemy.hp/enemy.maxHp*100)}%"></i></span>`}
-      if(x===state.player.x&&y===state.player.y){tile.className='tile player-tile';tile.title='You';tile.innerHTML='<span class="sprite">🧑‍🚀</span>'}
+      const enemy=enemyAt(x,y), item=state.items.find(i=>i.x===x&&i.y===y), combat = combatEvents.find(event => event.targetX===x && event.targetY===y);
+      if(x===state.exit.x&&y===state.exit.y){tile.classList.add('exit-tile');tile.title=state.floor===5?'The signal core':'Descent to the next depth';tile.innerHTML='<span class="unit-figure exit-unit"><span class="sprite">▣</span></span>'}
+      if(item){tile.className='tile item-tile';tile.innerHTML=`<span class="unit-figure item-unit"><span class="sprite">${item.type==='ration'?'✚':'✦'}</span></span>`;tile.title=item.type==='ration'?'Field ration':'Signal shard'}
+      if(enemy){tile.className=`tile enemy-tile${enemy.boss?' boss-tile':''}`;tile.title=`${enemy.name} · ${enemy.hp}/${enemy.maxHp} HP`;tile.setAttribute('aria-label',`${enemy.name}, ${enemy.hp} of ${enemy.maxHp} vitality`);tile.innerHTML=`${unitMotionMarkup('enemy', enemy.id, enemy.icon)}<span class="hp-pip"><i style="width:${Math.max(3,enemy.hp/enemy.maxHp*100)}%"></i></span>`; if (combat) tile.classList.add(`attack-${combat.type}`);}
+      if(x===state.player.x&&y===state.player.y){tile.className='tile player-tile';tile.title='You';tile.innerHTML=unitMotionMarkup('player','player','🧑‍🚀'); if(tileCombat) tile.classList.add(`attack-${tileCombat.type}`);}
+      if(combat && !(enemy || (x===state.player.x&&y===state.player.y))) tile.classList.add(`attack-${combat.type}`);
       board.appendChild(tile);
     }
     $('floor-number').textContent=String(state.floor).padStart(2,'0');
@@ -107,15 +137,18 @@
   function nearestEnemy(){return state.enemies.filter(e=>Math.abs(e.x-state.player.x)+Math.abs(e.y-state.player.y)===1).sort((a,b)=>a.hp-b.hp)[0]}
   function gainXp(n){state.xp+=n;while(state.xp>=state.rank*30){state.xp-=state.rank*30;state.rank++;state.maxHp+=4;state.hp=Math.min(state.maxHp,state.hp+8);log(`RANK UP! Vitality increased. You are rank ${state.rank}.`);toast(`RANK ${String(state.rank).padStart(2,'0')} REACHED`);burst('RANK UP', 'var(--lime)');tone(660,.16)}}
   function move(dir){if(!state||state.ended)return;const [dx,dy]=directions[dir]||[];if(dx===undefined)return;const nx=state.player.x+dx,ny=state.player.y+dy;
-    if(!inside(nx,ny)||state.walls.has(key(nx,ny))) {tone(110,.035);return}
+    if(!inside(nx,ny)||tileClass(nx,ny)==='wall') {tone(110,.035);return}
     const enemy=enemyAt(nx,ny);
     if(enemy){attack(enemy);return}
+    const from = { x: state.player.x, y: state.player.y };
     state.player={x:nx,y:ny};state.turn++;
+    const variant = dir === 'up' ? 'vault-up' : dir === 'down' ? 'vault-down' : dir === 'left' ? 'vault-left' : 'vault-right';
+    queueMoveMotion('player', 'player', from, { x: nx, y: ny }, variant);
     collect();
     if(nx===state.exit.x&&ny===state.exit.y){if(state.floor===5){if(!state.enemies.some(e=>e.boss)){finish(true);return}log('The descent is sealed. Defeat the Rootwraith first.')}else{nextFloor();return}}
     worldTurn();render();tone(250,.025);
   }
-  function attack(enemy){const damage=2+Math.floor((state.rank-1)/2)+((Math.random()*3)|0);enemy.hp-=damage;state.turn++;log(`You strike ${enemy.name} for ${damage} damage.`);burst(`-${damage}`, 'var(--coral)');tone(180,.05);
+  function attack(enemy){const damage=2+Math.floor((state.rank-1)/2)+((Math.random()*3)|0);enemy.hp-=damage;state.turn++;queueCombatEvent(enemy.x, enemy.y, 'player-strike', 'player');log(`You strike ${enemy.name} for ${damage} damage.`);burst(`-${damage}`, 'var(--coral)');tone(180,.05);
     if(enemy.hp<=0){defeat(enemy);worldTurn();render();return}
     worldTurn();render();
   }
@@ -123,12 +156,12 @@
   function worldTurn(){
     if(state.ended)return;
     // Crew members chip at nearby threats after every committed move.
-    for(const c of state.team){const target=state.enemies.find(e=>Math.abs(e.x-state.player.x)+Math.abs(e.y-state.player.y)===1);if(target){const dmg=c.atk+((Math.random()*2)|0);target.hp-=dmg;log(`${c.name} hits ${target.name} for ${dmg}.`);if(target.hp<=0)defeat(target)}}
+    for(const c of state.team){const target=state.enemies.find(e=>Math.abs(e.x-state.player.x)+Math.abs(e.y-state.player.y)===1);if(target){const dmg=c.atk+((Math.random()*2)|0);target.hp-=dmg;queueCombatEvent(target.x, target.y, 'crew-strike', c.name);log(`${c.name} hits ${target.name} for ${dmg}.`);if(target.hp<=0)defeat(target)}}
     for(const e of [...state.enemies]){
       if(!state.enemies.includes(e))continue;
       const dist=Math.abs(e.x-state.player.x)+Math.abs(e.y-state.player.y);
-      if(dist===1){state.hp-=e.atk;log(`${e.name} claws you for ${e.atk}.`);frameHit();tone(90,.08);if(state.hp<=0){state.hp=0;finish(false);return}continue}
-      if(dist<=6){const options=shuffle([[0,-1],[0,1],[-1,0],[1,0]]);for(const [dx,dy] of options){const nx=e.x+dx,ny=e.y+dy;if(inside(nx,ny)&&!state.walls.has(key(nx,ny))&&!(nx===state.player.x&&ny===state.player.y)&&!enemyAt(nx,ny)&&!(nx===state.exit.x&&ny===state.exit.y)){e.x=nx;e.y=ny;break}}}
+      if(dist===1){state.hp-=e.atk;queueCombatEvent(state.player.x, state.player.y, 'enemy-hit', 'wild');log(`${e.name} claws you for ${e.atk}.`);frameHit();tone(90,.08);if(state.hp<=0){state.hp=0;finish(false);return}continue}
+      if(dist<=6){const options=shuffle([[0,-1],[0,1],[-1,0],[1,0]]);for(const [dx,dy] of options){const nx=e.x+dx,ny=e.y+dy;if(inside(nx,ny)&&!state.walls.has(key(nx,ny))&&!(nx===state.player.x&&ny===state.player.y)&&!enemyAt(nx,ny)&&!(nx===state.exit.x&&ny===state.exit.y)){const from = { x: e.x, y: e.y }; e.x=nx;e.y=ny;const moveType = dx===1 ? 'vault-right' : dx===-1 ? 'vault-left' : dy===1 ? 'vault-down' : 'vault-up';queueMoveMotion('enemy', e.id, from, { x: nx, y: ny }, moveType);break}}}
     }
   }
   function collect(){const item=state.items.find(i=>i.x===state.player.x&&i.y===state.player.y);if(!item)return;state.items=state.items.filter(i=>i!==item);if(item.type==='ration'){state.rations++;log('Field ration secured.');toast('FIELD RATION +1');burst('+1', 'var(--yellow)')}else{state.signals++;log('Signal shard recovered. +1 capture charge.');toast('SIGNAL CHARGE +1');burst('✦', 'var(--yellow)')}}
@@ -140,7 +173,7 @@
     if(state.signals<1){log('No capture charges. Find a signal shard.');toast('NO SIGNAL CHARGES');return}
     if(state.team.length>=3){log('Crew is full. Your three bonds are strong.');toast('CREW AT CAPACITY');return}
     state.signals--;state.turn++;const chance=enemy.hp/enemy.maxHp<=.4?.88:enemy.hp/enemy.maxHp<=.7?.54:.22;
-    if(Math.random()<chance){const s=species[Math.floor(Math.random()*species.length)];const c={...s,hp:s.hp,maxHp:s.hp,id:Date.now()};state.team.push(c);state.enemies=state.enemies.filter(e=>e!==enemy);log(`${enemy.name} trusts your signal. ${c.name} joined the crew!`);gainXp(5);toast(`${c.name.toUpperCase()} JOINED THE CREW`);burst('BONDED!', 'var(--lime)');tone(520,.12);worldTurn()}else{log(`${enemy.name} resisted the pulse! Weaken it first.`);toast('PULSE RESISTED');tone(150,.08);worldTurn()}
+    if(Math.random()<chance){const s=species[Math.floor(Math.random()*species.length)];const c={...s,hp:s.hp,maxHp:s.hp,id:Date.now()};state.team.push(c);state.enemies=state.enemies.filter(e=>e!==enemy);queueCombatEvent(enemy.x, enemy.y, 'capture', 'player');log(`${enemy.name} trusts your signal. ${c.name} joined the crew!`);gainXp(5);toast(`${c.name.toUpperCase()} JOINED THE CREW`);burst('BONDED!', 'var(--lime)');tone(520,.12);worldTurn()}else{queueCombatEvent(enemy.x, enemy.y, 'pulse-shock', 'player');log(`${enemy.name} resisted the pulse! Weaken it first.`);toast('PULSE RESISTED');tone(150,.08);worldTurn()}
     render();
   }
   function ration(){
