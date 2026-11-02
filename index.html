@@ -16,15 +16,18 @@
     <header class="topbar">
       <a class="brand" href="#" aria-label="Cryptid home"><span class="brand-mark">✳</span><span>CRYPTID<span class="brand-dot">.</span></span></a>
       <div class="run-stamp"><span class="live-dot"></span> FIELD LINK ACTIVE <span class="stamp-divider">/</span> <span id="seed">SECTOR 01</span></div>
-      <button class="icon-button" id="sound-button" title="Toggle sound" aria-label="Toggle sound">♫</button>
+      <button class="icon-button" id="sound-button" title="Enable sound" aria-label="Toggle sound" aria-pressed="false">♫</button>
     </header>
 
     <section class="game-layout" aria-label="Game">
       <section class="main-column">
-        <div class="section-heading"><div><p class="eyebrow">THE UNDERWILD // EXPEDITION LOG</p><h1 id="floor-title">THE MOSSBOUND ARCHIVE <span>01</span></h1></div><div class="floor-badge"><span>DEPTH</span><strong id="floor-number">01</strong><span> / 05</span></div></div>
+        <div class="section-heading"><div><p class="eyebrow">THE UNDERWILD <span class="eyebrow-divider">//</span> EXPEDITION LOG</p><h1 id="floor-title">THE MOSSBOUND ARCHIVE <span>01</span></h1><p class="floor-subtitle" id="floor-subtitle">An archive reclaimed by root and time.</p></div><div class="floor-badge"><span>DEPTH</span><strong id="floor-number">01</strong><span> / 05</span></div></div>
+        <div class="depth-track" id="depth-progress" aria-label="Expedition depth: 1 of 5"><i class="active"></i><i></i><i></i><i></i><i></i><span>DESCENT PROGRESS</span></div>
         <div class="game-frame">
           <div class="map-topline"><span><i class="tiny-square"></i> LIVE MAP</span><span id="map-hint">WASD / ARROWS TO MOVE</span><span class="map-coords" id="coords">X 06 · Y 04</span></div>
           <div id="board" class="board" role="grid" aria-label="Dungeon map"></div>
+          <div id="fx-layer" class="fx-layer" aria-hidden="true"></div>
+          <div id="toast" class="game-toast" role="status" aria-live="polite"></div>
           <div class="map-footer"><span><b class="legend player-legend">◆</b> YOU</span><span><b class="legend enemy-legend">●</b> WILD</span><span><b class="legend loot-legend">✦</b> CACHE</span><span><b class="legend exit-legend">▣</b> DESCENT</span><span class="turn-counter" id="turn-counter">TURN 000</span></div>
         </div>
         <div class="controls-row">
