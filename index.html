@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#121a1b" />
+  <title>Hollowroot — a pocket dungeon expedition</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Hollowroot home"><span class="brand-mark">✦</span><span>HOLLOWROOT<small>FIELD NOTES · 01</small></span></a>
+      <div class="top-note"><span class="live-dot"></span> THE UNDERGROVE IS RESTLESS</div>
+      <button class="sound-button" id="sound-button" aria-label="Toggle sound effects" title="Toggle sound effects">♫ <span id="sound-label">SOUND OFF</span></button>
+    </header>
+
+    <section class="intro-row">
+      <div><p class="eyebrow" id="eyebrow">A SMALL-SCALE CREATURE ROGUELITE</p><h1 id="page-title">The roots run deeper.</h1><p class="intro-copy" id="page-copy">Gather your odd little crew. Make every step count. Find the way back before the dark finds you.</p></div>
+      <div class="run-stamp"><span>EXPEDITION</span><strong id="run-number">01</strong><small>UNDERGROVE</small></div>
+    </section>
+
+    <section class="game-layout" id="hub-screen">
+      <div class="hub-art panel">
+        <div class="hub-sky"><div class="moon"></div><div class="hub-tree tree-one">♣</div><div class="hub-tree tree-two">♣</div><div class="hub-tree tree-three">♣</div><div class="hub-ground"></div><div class="campfire"><i></i><i></i><i></i><b></b></div></div>
+        <div class="hub-caption"><div><span class="eyebrow">YOUR WAYSTATION</span><h2>Thimblewick Camp</h2><p>A lantern-lit pocket between the roots. Your crew catches its breath here.</p></div><div class="camp-stat"><span>POCKETS</span><strong><span id="hub-embers">0</span><i>✦</i></strong><small>GLOAM EMBERS</small></div></div>
+      </div>
+      <aside class="side-panel panel">
+        <div class="panel-heading"><div><span class="eyebrow">THE CREW</span><h2>Field companions</h2></div><span class="crew-count" id="crew-count">2 / 4</span></div>
+        <div class="crew-list" id="hub-roster"></div>
+        <div class="upgrade-box"><div class="upgrade-top"><div><span class="eyebrow">CAMP CRAFT</span><h3>Rootwoven charm</h3></div><span class="upgrade-cost">✦ <b id="upgrade-cost">4</b></span></div><p>Give one companion a little extra staying power. Upgrades last between descents.</p><div id="upgrade-options" class="upgrade-options"></div></div>
+        <button class="primary-button" id="start-run">DESCEND INTO THE UNDERGROVE <span>→</span></button>
+      </aside>
+    </section>
+
+    <section class="game-layout dungeon-layout hidden" id="dungeon-screen">
+      <div class="board-panel panel">
+        <div class="board-top"><div><span class="eyebrow">UNDERGROVE · LEVEL 01</span><h2 id="dungeon-title">Mosslight Grotto</h2></div><div class="turn-pill"><span class="turn-dot"></span><span id="turn-status">YOUR TURN</span><b id="turn-number">01</b></div></div>
+        <div class="canvas-wrap"><canvas id="game-canvas" width="640" height="448" aria-label="Top-down dungeon map"></canvas><div class="toast hidden" id="toast" role="status"></div></div>
+        <div class="board-footer"><span><i class="legend-dot ally-dot"></i> YOUR CREW</span><span><i class="legend-dot foe-dot"></i> WILDSHAPES</span><span><i class="legend-dot loot-dot"></i> FINDS</span><span class="floor-coord" id="floor-coord">ROOM 01 · 00:00</span></div>
+      </div>
+      <aside class="side-panel panel dungeon-sidebar">
+        <div class="panel-heading"><div><span class="eyebrow">EXPEDITION LOG</span><h2>Your little crew</h2></div><button class="quiet-button" id="retreat-button" title="Return to camp">↩ <span>RETREAT</span></button></div>
+        <div class="party-list" id="party-list"></div>
+        <div class="selected-card" id="selected-card"></div>
+        <div class="action-hint" id="action-hint"><span class="keycap">WASD</span> move <span class="keycap">SPACE</span> attack<br><span class="keycap">E</span> interact <span class="keycap">TAB</span> next friend</div>
+        <div class="log-box"><div class="log-heading"><span>FIELD NOTES</span><span>● LIVE</span></div><ol id="event-log"></ol></div>
+        <button class="end-turn-button" id="end-turn">END CREW TURN <span>↻</span></button>
+      </aside>
+    </section>
+
+    <footer class="site-footer"><span>NO TWO DESCENTS FEEL QUITE THE SAME.</span><span>MADE FOR SMALL BRAVE THINGS <b>✳</b></span></footer>
+  </main>
+  <div class="modal-backdrop hidden" id="result-modal"><div class="result-card panel"><span class="eyebrow" id="result-eyebrow">BACK AT THIMBLEWICK</span><h2 id="result-title">A good little haul.</h2><p id="result-copy"></p><div class="result-rewards" id="result-rewards"></div><button class="primary-button" id="return-hub">RETURN TO CAMP <span>→</span></button></div></div>
+  <script src="game.js"></script>
+</body>
+</html>
