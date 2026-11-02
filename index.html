@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#101626" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <title>CRYPTID: Deep Signal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Cryptid home"><span class="brand-mark">✳</span><span>CRYPTID<span class="brand-dot">.</span></span></a>
+      <div class="run-stamp"><span class="live-dot"></span> FIELD LINK ACTIVE <span class="stamp-divider">/</span> <span id="seed">SECTOR 01</span></div>
+      <button class="icon-button" id="sound-button" title="Toggle sound" aria-label="Toggle sound">♫</button>
+    </header>
+
+    <section class="game-layout" aria-label="Game">
+      <section class="main-column">
+        <div class="section-heading"><div><p class="eyebrow">THE UNDERWILD // EXPEDITION LOG</p><h1 id="floor-title">THE MOSSBOUND ARCHIVE <span>01</span></h1></div><div class="floor-badge"><span>DEPTH</span><strong id="floor-number">01</strong><span> / 05</span></div></div>
+        <div class="game-frame">
+          <div class="map-topline"><span><i class="tiny-square"></i> LIVE MAP</span><span id="map-hint">WASD / ARROWS TO MOVE</span><span class="map-coords" id="coords">X 06 · Y 04</span></div>
+          <div id="board" class="board" role="grid" aria-label="Dungeon map"></div>
+          <div class="map-footer"><span><b class="legend player-legend">◆</b> YOU</span><span><b class="legend enemy-legend">●</b> WILD</span><span><b class="legend loot-legend">✦</b> CACHE</span><span><b class="legend exit-legend">▣</b> DESCENT</span><span class="turn-counter" id="turn-counter">TURN 000</span></div>
+        </div>
+        <div class="controls-row">
+          <div class="action-copy"><span class="eyebrow">YOUR NEXT MOVE</span><span id="action-hint">The ruins are quiet. Find the descent.</span></div>
+          <div class="dpad" aria-label="Movement controls">
+            <button data-move="up" aria-label="Move up">↑</button><button data-move="left" aria-label="Move left">←</button><button data-move="down" aria-label="Move down">↓</button><button data-move="right" aria-label="Move right">→</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="panel operator-panel">
+          <div class="panel-title"><span>01 / OPERATOR</span><span class="status-pill">ONLINE</span></div>
+          <div class="operator-profile"><div class="operator-avatar">⌁</div><div><h2>FIELD SCOUT</h2><p>RANK <span id="rank">01</span> <span class="sep">·</span> <span id="xp-label">0 / 30 XP</span></p></div></div>
+          <div class="stat-line"><span>VITALITY</span><strong id="hp-text">24 / 24</strong></div><div class="meter"><i id="hp-bar"></i></div>
+          <div class="stat-line resource-line"><span>✦ SIGNAL CHARGES</span><strong id="signal-count">3</strong></div>
+          <div class="operator-actions"><button class="action-button" id="pulse-button"><span>◎</span> CAPTURE PULSE <kbd>SPACE</kbd></button><button class="action-button secondary" id="snack-button"><span>＋</span> FIELD RATION <small id="ration-count">×2</small></button></div>
+        </section>
+
+        <section class="panel team-panel"><div class="panel-title"><span>02 / YOUR CREW</span><span id="team-count">01 / 03</span></div><div id="team-list" class="team-list"></div><p class="team-note" id="team-note">A lone signal in the dark. Catch a wild friend.</p></section>
+
+        <section class="panel journal-panel"><div class="panel-title"><span>03 / FIELD NOTES</span><span class="journal-mark">✳</span></div><div id="log" class="log" aria-live="polite"></div></section>
+        <div class="sidebar-foot"><span>DEEP SIGNAL INITIATIVE</span><span>v.01.05</span></div>
+      </aside>
+    </section>
+    <footer class="page-footer"><span>AN EXPEDITION INTO THE UNKNOWN</span><span>TIP: WEAKEN A CREATURE BEFORE USING YOUR CAPTURE PULSE.</span></footer>
+  </main>
+
+  <div id="modal" class="modal visible" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card"><span class="modal-kicker"><i class="tiny-square"></i> DEEP SIGNAL INITIATIVE</span><div class="hero-sigil">✳</div><p class="eyebrow">A CREATURE-COLLECTING ROGUELITE</p><h2 id="modal-title">THE UNDERWILD<br><em>IS CALLING.</em></h2><p class="modal-copy">Descend into a shifting underground world. Befriend the things that live below, outlast the dark, and find your way to the heart of the signal.</p><div class="howto"><span><kbd>WASD</kbd> MOVE & EXPLORE</span><span><kbd>SPACE</kbd> CAPTURE ADJACENT WILD</span></div><button id="start-button" class="primary-button">BEGIN EXPEDITION <span>↗</span></button><p class="save-note">EVERY DESCENT IS A NEW STORY · YOUR CREW PERSISTS</p></div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
